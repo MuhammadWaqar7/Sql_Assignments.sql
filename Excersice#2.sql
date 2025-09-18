@@ -1,17 +1,10 @@
-   --- Excersice#2
-   SELECT
-       c.last_name,
-       c.first_name,
-       c.favorite_color
-   FROM 
-       customers c
-   -- Left join to include all customers, even those without sales
-   LEFT JOIN sales s 
-       ON c.customer_id = s.customer_id
-   -- Filter for customers where no sales record exists
-   WHERE s.customer_id IS NULL
-   -- Sort alphabetically by last name for clean presentation
-   ORDER BY 
-       c.last_name ASC,
-       c.first_name ASC;
-   --As we run on previouse data set provide there its shows null because all our customer did purchases not any null values.
+-- Exercise 2: I this exercise suppose to data of exercise#1
+SELECT
+    cust.last_name,
+    cust.first_name,
+    col.name AS favorite_color
+FROM customer cust
+LEFT JOIN clothing_order co ON cust.id = co.customer_id
+INNER JOIN color col ON cust.favorite_color_id = col.id
+WHERE co.customer_id IS NULL
+ORDER BY cust.last_name ASC, cust.first_name ASC;
