@@ -1,67 +1,119 @@
-CREATE DATABASE clothing_store;
-USE clothing_store;
-CREATE TABLE customers (
-    customer_id INT PRIMARY KEY,
+-- Create tables
+CREATE TABLE color (
+    id INT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    extra_fee DECIMAL(10, 2) DEFAULT 0
+);
+
+CREATE TABLE customer (
+    id INT PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
-    favorite_color VARCHAR(30) NOT NULL,
-    email VARCHAR(100)
+    favorite_color_id INT,
+    FOREIGN KEY (favorite_color_id) REFERENCES color(id)
 );
 
--- Create clothing_items table
-CREATE TABLE clothing_items (
-    item_id INT PRIMARY KEY,
-    item_name VARCHAR(100) NOT NULL,
-    color VARCHAR(30) NOT NULL,
-    price DECIMAL(10, 2),
-    category VARCHAR(50)
+CREATE TABLE category (
+    id INT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    parent_id INT NULL,
+    FOREIGN KEY (parent_id) REFERENCES category(id)
 );
--- Create sales table (junction table)
-CREATE TABLE sales (
-    sale_id INT PRIMARY KEY,
+
+CREATE TABLE clothing (
+    id INT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    size CHAR(3) CHECK (size IN ('S', 'M', 'L', 'XL', '2XL', '3XL')),
+    price DECIMAL(10, 2) NOT NULL,
+    color_id INT NOT NULL,
+    category_id INT NOT NULL,
+    FOREIGN KEY (color_id) REFERENCES color(id),
+    FOREIGN KEY (category_id) REFERENCES category(id)
+);
+
+CREATE TABLE clothing_order (
+    id INT PRIMARY KEY,
     customer_id INT NOT NULL,
-    item_id INT NOT NULL,
-    sale_date DATE NOT NULL,
-    quantity INT DEFAULT 1,
-    FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
-    FOREIGN KEY (item_id) REFERENCES clothing_items(item_id)
+    clothing_id INT NOT NULL,
+    items INT DEFAULT 1 CHECK (items > 0),
+    order_date DATE NOT NULL,
+    FOREIGN KEY (customer_id) REFERENCES customer(id),
+    FOREIGN KEY (clothing_id) REFERENCES clothing(id)
 );
+
+-- Insert colors
+INSERT INTO color (id, name, extra_fee) VALUES
+(1, 'Red', 0.00),
+(2, 'Blue', 0.00),
+(3, 'Green', 0.00),
+(4, 'Black', 0.00),
+(5, 'White', 0.00),
+(6, 'Gold', 5.00),
+(7, 'Silver', 3.00);
+
 -- Insert customers
-INSERT INTO customers (customer_id, first_name, last_name, favorite_color, email) VALUES
-(1, 'John', 'Doe', 'Blue', 'john.doe@email.com'),
-(2, 'Jane', 'Smith', 'Red', 'jane.smith@email.com'),
-(3, 'Bob', 'Johnson', 'Green', 'bob.johnson@email.com'),
-(4, 'Alice', 'Brown', 'Blue', 'alice.brown@email.com'),
-(5, 'Charlie', 'Wilson', 'Black', 'charlie.wilson@email.com');
+INSERT INTO customer (id, first_name, last_name, favorite_color_id) VALUES
+(1, 'John', 'Doe', 2),    -- Blue
+(2, 'Jane', 'Smith', 1),  -- Red
+(3, 'Bob', 'Johnson', 3), -- Green
+(4, 'Alice', 'Brown', 2), -- Blue
+(5, 'Charlie', 'Wilson', 4), -- Black
+(6, 'Emma', 'Davis', 7);  -- Silver (no orders)
+
+-- Insert categories (hierarchical structure)
+INSERT INTO category (id, name, parent_id) VALUES
+-- Main categories
+(1, 'Tops', NULL),
+(2, 'Bottoms', NULL),
+(3, 'Footwear', NULL),
+(4, 'Accessories', NULL),
+
+-- Subcategories of Tops
+(5, 'T-Shirts', 1),
+(6, 'Sweatshirts', 1),
+(7, 'Jackets', 1),
+
+-- Subcategories of Bottoms
+(8, 'Pants', 2),
+(9, 'Shorts', 2),
+
+-- Subcategories of Footwear
+(10, 'Running Shoes', 3),
+(11, 'Basketball Shoes', 3),
+
+-- Subcategories of Accessories
+(12, 'Hats', 4),
+(13, 'Socks', 4);
 
 -- Insert clothing items
-INSERT INTO clothing_items (item_id, item_name, color, price, category) VALUES
-(101, 'Cotton T-Shirt', 'Blue', 19.99, 'Tops'),
-(102, 'Denim Jeans', 'Blue', 49.99, 'Bottoms'),
-(103, 'Summer Dress', 'Red', 59.99, 'Dresses'),
-(104, 'Leather Jacket', 'Black', 129.99, 'Outerwear'),
-(105, 'Sports Shorts', 'Green', 29.99, 'Sportswear'),
-(106, 'Wool Sweater', 'Red', 79.99, 'Tops'),
-(107, 'Silk Scarf', 'Blue', 24.99, 'Accessories');
+INSERT INTO clothing (id, name, size, price, color_id, category_id) VALUES
+(1, 'Cotton T-Shirt', 'M', 19.99, 2, 5),    
+(2, 'Denim Jeans', 'L', 49.99, 2, 8),       
+(3, 'Summer Dress', 'S', 59.99, 1, 5),      
+(4, 'Leather Jacket', 'XL', 129.99, 4, 7),  
+(5, 'Sports Shorts', 'M', 29.99, 3, 9),     
+(6, 'Wool Sweater', 'L', 79.99, 1, 6),      
+(7, 'Running Shoes', '42', 89.99, 5, 10),   
+(8, 'Baseball Cap', 'L', 24.99, 2, 12);     
 
--- Insert sales records
-INSERT INTO sales (sale_id, customer_id, item_id, sale_date, quantity) VALUES
-(1001, 1, 101, '2024-01-15', 2),
-(1002, 1, 102, '2024-01-20', 1),
-(1003, 2, 103, '2024-02-10', 1),
-(1004, 2, 106, '2024-02-12', 1),
-(1005, 3, 105, '2024-02-15', 1),
-(1006, 4, 101, '2024-02-18', 1),
-(1007, 4, 107, '2024-02-20', 1),
-(1008, 5, 104, '2024-02-25', 1);
+-- Insert orders
+INSERT INTO clothing_order (id, customer_id, clothing_id, items, order_date) VALUES
+(1, 1, 1, 2, '2024-01-15'),  
+(2, 1, 2, 1, '2024-01-20'),  
+(3, 2, 3, 1, '2024-02-10'),  
+(4, 2, 6, 1, '2024-02-12'),  
+(7, 4, 8, 2, '2024-02-20'),  
+(8, 5, 4, 1, '2024-02-25');  
 
+-- Exercise 1: List clothing items and customers who bought them in their favorite color
 SELECT
-    ci.item_name AS clothes,
-    ci.color AS color,
-    c.last_name,
-    c.first_name
-FROM clothing_items ci
-INNER JOIN sales s ON ci.item_id = s.item_id
-INNER JOIN customers c ON s.customer_id = c.customer_id
-WHERE ci.color = c.favorite_color
-ORDER BY color ASC, c.last_name ASC;
+    c.name AS clothes,
+    col.name AS color,
+    cust.last_name,
+    cust.first_name
+FROM clothing c
+INNER JOIN clothing_order co ON c.id = co.clothing_id
+INNER JOIN customer cust ON co.customer_id = cust.id
+INNER JOIN color col ON c.color_id = col.id
+WHERE c.color_id = cust.favorite_color_id
+ORDER BY col.name ASC, cust.last_name ASC;
